@@ -2,9 +2,12 @@ from scapy.all import *
 from threading import Thread
 from socket import getservbyport
 import os
+import sys
 
 
 class Sniffer:
+    ip_first_three = "192"
+
     def __init__(self):
         self.adds = []
         self.protos = []
@@ -16,7 +19,7 @@ class Sniffer:
         self.size = {}
 
     def check_if_addr_exists(self, addr, packet):
-        if addr in self.adds and str(addr)[:3] == "192":
+        if addr in self.adds and str(addr)[:3] == Sniffer.ip_first_three:
             value = self.connections[addr]
 
             self.connections[addr] = int(value) + 1
@@ -24,7 +27,7 @@ class Sniffer:
             self.size[addr] = int(buffer) + int(len(packet))
             self.total += 1
         else:
-            if str(addr)[:3] == "192":
+            if str(addr)[:3] == Sniffer.ip_first_three:
                 self.adds.append(addr)
                 self.size[addr] = len(packet)
                 self.connections[addr] = 1
@@ -78,13 +81,18 @@ class Sniffer:
                 for key2 in self.packets:
                     prctg2 = (int(self.packets[key2]) / self.proto_total) * 100
                     print(key2, '->', "%.2f" % prctg2 + "%" + '\n', end='')
-                print("\n *** ADDRESSES => % OF BUFFER SENT/RECEIVED IN TOTAL *** ")
+                print("\n *** ADDRESSES => % OF DATA SENT/RECEIVED IN TOTAL *** ")
                 for key3 in self.size:
                     print(key3, '->', self.size[key3], end='\n')
                 time.sleep(0.25)
-                os.system("cls")
-            except:
-                pass
+
+                if os.name == 'nt':
+                    os.system("cls")
+                else:
+                    os.system("clear")
+                    
+            except KeyboardInterrupt:
+                exit()
 
     def sniff_packets(self):
         sniff(prn=self.handle_packet)

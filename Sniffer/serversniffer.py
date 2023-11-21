@@ -1,9 +1,12 @@
 import socket
 from scapy.all import *
 from threading import Thread
+import sys
 
 
 class ServerSniffer:
+    ip_base = "192.168"
+
     def __init__(self, address, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.address = address
@@ -20,14 +23,14 @@ class ServerSniffer:
         self.socket.listen()
 
     def check_if_addr_exists(self, addr, buffer):
-        if addr in self.adds and addr[:7] == "192.168":
+        if addr in self.adds and addr[:7] == ServerSniffer.ip_base:
             value = self.connections[addr]
             self.connections[addr] = int(value) + 1
             _buffer = self.size[addr]
             self.size[addr] = int(_buffer) + int(buffer)
             self.total += 1
         else:
-            if addr[:7] == "192.168":
+            if addr[:7] == ServerSniffer.ip_base:
                 self.adds.append(addr)
                 self.size[addr] = int(buffer)
                 self.connections[addr] = 1
@@ -71,11 +74,16 @@ class ServerSniffer:
                     prctg2 = (int(self.packets[key2]) / self.proto_total) * 100
                     print(key2, '->', "%.2f" % prctg2 + "%" + '\n', end='')
                 print(
-                    "\n *** ADDRESSES => % OF BUFFER SENT/RECEIVED IN TOTAL IN BYTES *** ")
+                    "\n *** ADDRESSES => % OF DATA SENT/RECEIVED IN TOTAL IN BYTES *** ")
                 for key3 in self.size:
                     print(key3, '->', self.size[key3], end='\n')
                 time.sleep(0.25)
-                os.system("cls")
+
+                if os.name == 'nt':
+                    os.system("cls")
+                else:
+                    os.system("clear")
+                    
             except:
                 pass
 
@@ -86,11 +94,11 @@ class ServerSniffer:
                 client, addr = self.socket.accept()
                 if client:
                     Thread(target=self.handle_client, args=(client,)).start()
-            except:
-                pass
+            except KeyboardInterrupt:
+                exit()
 
 
-addr = input("Address: ")
-port = int(input("Port: "))
+addr = sys.argv[1]
+port = int(sys.argv[2])
 s = ServerSniffer(addr, port)
 s.accept_client()

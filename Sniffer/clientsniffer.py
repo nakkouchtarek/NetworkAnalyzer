@@ -2,10 +2,13 @@ from scapy.all import *
 import socket
 from socket import getservbyport
 import time
+import sys
 import os
 
 
 class ClientSniffer:
+    ip_first_three = "192"
+
     def __init__(self, address, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.address = address
@@ -21,7 +24,7 @@ class ClientSniffer:
         self.socket.connect((self.address, self.port))
 
     def check_if_addr_exists(self, addr, packet):
-        if addr in self.adds and str(addr)[:3] == "192":
+        if addr in self.adds and str(addr)[:3] == ClientSniffer.ip_first_three:
             value = self.connections[addr]
 
             self.connections[addr] = int(value) + 1
@@ -29,7 +32,7 @@ class ClientSniffer:
             self.size[addr] = int(buffer) + int(len(packet))
             self.total += 1
         else:
-            if str(addr)[:3] == "192":
+            if str(addr)[:3] == ClientSniffer.ip_first_three:
                 self.adds.append(addr)
                 self.size[addr] = len(packet)
                 self.connections[addr] = 1
@@ -86,11 +89,15 @@ class ClientSniffer:
                 for key2 in self.packets:
                     prctg2 = (int(self.packets[key2]) / self.proto_total) * 100
                     print(key2, '->', "%.2f" % prctg2 + "%" + '\n', end='')
-                print("\n *** ADDRESSES => % OF BUFFER SENT/RECEIVED IN TOTAL *** ")
+                print("\n *** ADDRESSES => % OF DATA SENT/RECEIVED IN TOTAL *** ")
                 for key3 in self.size:
                     print(key3, '->', self.size[key3], end='\n')
                 time.sleep(0.25)
-                os.system("cls")
+
+                if os.name == 'nt':
+                    os.system("cls")
+                else:
+                    os.system("clear")
             except:
                 pass
 
@@ -102,7 +109,7 @@ class ClientSniffer:
         Thread(target=self.update,).start()
 
 
-addr = input("Address: ")
-port = int(input("Port: "))
+addr = sys.argv[1]
+port = int(sys.argv[2])
 c = ClientSniffer(addr, port)
 c.main()
