@@ -1,6 +1,6 @@
 # NetworkAnalyzer
 
-Packages needed: scapy psutil :
+Install needed packages
 ```
 pip install scapy psutil
 ```
